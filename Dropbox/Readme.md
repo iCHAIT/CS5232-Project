@@ -54,4 +54,5 @@ Before every trace clear cookies and sessions
 > D ---> Client Key Exchange, Change Cipher Spec, Encrypted Handshake Message
 
 > E ---> New Session Ticket, Change Cipher Spec, Encrypted Handshake Message
-F ---> Application Data
+
+> F ---> Application Data
