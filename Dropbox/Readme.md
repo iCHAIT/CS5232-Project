@@ -1,16 +1,15 @@
 Dropbox
 ========
 
-(ip.addr==192.168.1.104 || ip.addr == 162.125.81.3)  && ssl
+**Wireshark Filter:** (ip.addr==192.168.1.104 || ip.addr == 162.125.81.3)  && ssl
 
+Before every trace clear cookies and sessions
 
-* Before every trace clear cookies and sessions
-
-#### Procedure to Follow
+### Procedure to Follow
 
 1. Perform the following trace navigation at dropbox.com (10 times)
 
-START > Log in > Settings > Files > Deleted Files > Sharing > FIle requests > Home > Project > File > STOP
+> START > Log in > Settings > Files > Deleted Files > Sharing > FIle requests > Home > Project > File >STOP
 
 
 2. Save the 10 pcap wireshark file.
@@ -23,16 +22,16 @@ START > Log in > Settings > Files > Deleted Files > Sharing > FIle requests > Ho
 
 
 
-Trace 1 - X A B	C D	E F	F F	F F F Y
-Trace 2 - X A B	C D	E F	F F	F F	F F	F Y
-Trace 3 - X A B	C D	E F	F F	F F	F F	F Y
-Trace 4 - X A B	C D	E F	F F	F F	F F	F Y
-Trace 5 - X A B	C D	E F	F F	F F	F Y
-Trace 6 - X A B	C D	E F	F F	F F	F F	F Y
-Trace 7 - X A B	C D	E F	F F	F F	F Y
-Trace 8 - X A B	C D	E F	F F	F F	F F	F Y
-Trace 9 - X A B	C D	E F	F F	F F	F Y
-Trace 10 - X A B C D E F F F F F F Y
+> Trace 1 - X A B C D E F F F F F F Y
+> Trace 2 - X A B C D E F F F F F F F F Y
+> Trace 3 - X A B C D E F F F F F F F F Y
+> Trace 4 - X A B C D E F F F F F F F F Y
+> Trace 5 - X A B C D E F F F F F F Y
+> Trace 6 - X A B C D E F F F F F F F F Y
+> Trace 7 - X A B C D E F F F F F F Y
+> Trace 8 - X A B C D E F F F F F F F F Y
+> Trace 9 - X A B C D E F F F F F F Y
+> Trace 10 - X A B C D E F F F F F F Y
 
 
 
