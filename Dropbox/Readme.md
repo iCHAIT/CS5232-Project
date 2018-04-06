@@ -43,13 +43,15 @@ Before every trace clear cookies and sessions
 > Trace 10 - X A B C D E F F F F F F Y
 
 
+### Mapping Used
 
+> A ---> Client Hello
 
-#### Mapping Used
+> B ---> Server Hello
 
-A ---> Client Hello
-B ---> Server Hello
-C ---> Certificate, Server Key Exchange, Server Hello Done
-D ---> Client Key Exchange, Change Cipher Spec, Encrypted Handshake Message
-E ---> New Session Ticket, Change Cipher Spec, Encrypted Handshake Message
+> C ---> Certificate, Server Key Exchange, Server Hello Done
+
+> D ---> Client Key Exchange, Change Cipher Spec, Encrypted Handshake Message
+
+> E ---> New Session Ticket, Change Cipher Spec, Encrypted Handshake Message
 F ---> Application Data
