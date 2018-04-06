@@ -4,24 +4,44 @@ Dropbox
 (ip.addr==192.168.1.104 || ip.addr == 162.125.81.3)  && ssl
 
 
-Before every trace clear cookies and sessions
-Trace1: START > Log in > Settings > Files > Deleted Files > Sharing > FIle requests > Home > Project > File > STOP
+* Before every trace clear cookies and sessions
 
-Save the file
+#### Procedure to Follow
 
-We'll get 10 files and then we can merge.
+1. Perform the following trace navigation at dropbox.com (10 times)
 
-Convert the mapping back to doc and explain
+START > Log in > Settings > Files > Deleted Files > Sharing > FIle requests > Home > Project > File > STOP
 
-PCAP model
 
-A ---> Application Data
-B ---> Client Hello
-C ---> Server Hello
-D ---> Certificate, Server Key Exchange, Server Hello Done
-E ---> Client Key Exchange, Change Cipher Spec, Encrypted Handshake Message
-F ---> New Session Ticket, Change Cipher Spec, Encrypted Handshake Message
+2. Save the 10 pcap wireshark file.
 
+3. Exxport the pcap wireshark files as csv
+
+4. Analyse and assign mapping in excel
+
+5. Final Trace Obtained -
 
 
 
+Trace 1 - X A B	C D	E F	F F	F F F Y
+Trace 2 - X A B	C D	E F	F F	F F	F F	F Y
+Trace 3 - X A B	C D	E F	F F	F F	F F	F Y
+Trace 4 - X A B	C D	E F	F F	F F	F F	F Y
+Trace 5 - X A B	C D	E F	F F	F F	F Y
+Trace 6 - X A B	C D	E F	F F	F F	F F	F Y
+Trace 7 - X A B	C D	E F	F F	F F	F Y
+Trace 8 - X A B	C D	E F	F F	F F	F F	F Y
+Trace 9 - X A B	C D	E F	F F	F F	F Y
+Trace 10 - X A B C D E F F F F F F Y
+
+
+
+
+#### Mapping Used
+
+A ---> Client Hello
+B ---> Server Hello
+C ---> Certificate, Server Key Exchange, Server Hello Done
+D ---> Client Key Exchange, Change Cipher Spec, Encrypted Handshake Message
+E ---> New Session Ticket, Change Cipher Spec, Encrypted Handshake Message
+F ---> Application Data
