@@ -1,0 +1,384 @@
+﻿enum{
+	Tall_Alice, Short_Alice, Tall_Bob, Short_Bob,  //Tall Alice and short ALice are clients, Bob is the server
+	TallBob_TallAlice_session_key,  	 //session key between BOb and tall Alice and Short Alice
+	ShortBob_ShortAlice_session_key, //session key between BOb and tall Alice and Short Alice
+	Tall_Alice_signature, Short_Alice_signature, Tall_Bob_signature, Short_Bob_signature,
+
+	Eve, Nobody, // attacker Eve
+	Eve_TallBob_session_key, Eve_ShortBob_session_key,      //session key between Eve and BOb, tall Alice and Short Alice
+	Eve_TallAlice_session_key, Eve_ShortAlice_session_key,  //session key between Eve and BOb, tall Alice and Short Alice
+	
+	TallAlice_key_share1,TallBob_key_share1, messageTall1,
+	TallAlice_key_share2,TallBob_key_share2, messageTall2,
+	
+	TallAlice_key_share, TallBob_key_share, messageTall,
+	ShortAlice_key_share,ShortBob_key_share, messageShort,
+	
+	messagePSK1,
+	messagePSK2,
+	
+	Eve_key_share,
+	
+	hello, pri_key, NULL, encrypted_extensions, certificate_request, certificate, certificate_verify, finished, //messages
+	
+	TallBob_ECDSA_verify_key, 	ShortBob_ECDSA_verify_key, 
+	TallAlice_ECDSA_verify_key, ShortAlice_ECDSA_verify_key, // offical verify_key which are ground truth and well known.
+	
+	
+	///////////////for perfect forward secrecy, PSK mode
+	TallBob_TallAlice_session_key1,  
+	TallBob_TallAlice_session_key2,
+	PSK,
+	session_key_inside_PSK
+	};
+
+var Tall_Alice_connect_to = Nobody;
+var Short_Alice_connect_to = Nobody;
+var Tall_Bob_connect_to = Nobody;
+var Short_Bob_connect_to = Nobody;
+
+var Tall_Alice_session_key = NULL;
+var Short_Alice_session_key = NULL;
+var Tall_Bob_session_key = NULL;
+var Short_Bob_session_key = NULL;
+
+var Eve_session_key1 = NULL;
+var Eve_session_key2 = NULL;
+
+var Eve_brother_Decode_message = NULL;
+
+channel network 0;
+
+
+var temp_cli_sig = NULL; //used for saving the signature from client.
+Client_proc(client, ECDSA_verify_key,client_key_share,data) =  //client is the person who sent hello first, ECDSA_verify_key verifies the identity of ther server
+	network!client.hello-> 
+	Client_Send_hello_with_signature {
+		if (client == Tall_Alice){
+			temp_cli_sig = Tall_Alice_signature;
+		}
+		else {
+			temp_cli_sig = Short_Alice_signature;
+		}
+	}->
+	network!client.client_key_share.temp_cli_sig -> 
+	
+	network?x.hello -> 
+	network?x.server_key_share.signature_back ->//unknown
+	Client_safty_comfirm(x,client, ECDSA_verify_key,signature_back,client_key_share,data,server_key_share);
+	
+Client_safty_comfirm(x,client, ECDSA_verify_key,signature_back,client_key_share,data,server_key_share) = 
+	if ((ECDSA_verify_key == TallBob_ECDSA_verify_key)&& (signature_back == Tall_Bob_signature)){ // want to connect to tall bob
+		Client_Compute_session_key(x,client, ECDSA_verify_key,client_key_share,data,server_key_share)
+	}
+	else if ((ECDSA_verify_key == ShortBob_ECDSA_verify_key)&& (signature_back == Short_Bob_signature)){
+		Client_Compute_session_key(x,client, ECDSA_verify_key,client_key_share,data,server_key_share)
+	}
+	else {
+		Skip
+		//Client_proc(client, ECDSA_verify_key) // abort
+	};
+
+Client_Compute_session_key (x,client, ECDSA_verify_key,client_key_share,data,server_key_share) = 
+	Compute_session_key {
+		if (client_key_share != TallAlice_key_share1 &&  client_key_share != TallAlice_key_share2){
+			if (client == Tall_Alice){
+				if (x == Tall_Bob) {
+					Tall_Alice_session_key = TallBob_TallAlice_session_key;
+				} 
+				else {
+					Tall_Alice_session_key = Eve_TallAlice_session_key;
+				}  
+			}
+			else{
+				if (x == Short_Bob) {
+					Short_Alice_session_key = ShortBob_ShortAlice_session_key;
+				} 
+				else {
+					Short_Alice_session_key = Eve_ShortAlice_session_key;
+				}  
+			}
+		}
+		else {
+			if (client_key_share == TallAlice_key_share1 && server_key_share == TallBob_key_share1){
+				Tall_Alice_session_key = TallBob_TallAlice_session_key1;
+			}
+			else if (client_key_share == TallAlice_key_share2 && server_key_share == TallBob_key_share2){
+				Tall_Alice_session_key = TallBob_TallAlice_session_key2;
+			}
+			else {
+				Tall_Alice_session_key = Eve_TallAlice_session_key;//
+			}
+		}
+	}->
+	network?x.encrypted_extensions ->
+	network?x.certificate_request ->
+	network?x.certificate -> 
+   	network?x.certificate_verify ->
+   	network?x.finished->
+   
+   	network!client.certificate ->
+   	network!client.certificate_verify ->
+   	network!client.finished ->
+   	
+	Connect {
+		if (client == Tall_Alice){
+			Tall_Alice_connect_to = x;
+		}
+		else {
+			Short_Alice_connect_to = x;
+		}
+	} -> 
+	network!client.data->
+	network?x.server_data->
+	Skip;
+	//Client_proc(client, ECDSA_verify_key);
+	
+	
+////////////////////////////////////////////////////////////////////////////////////////////
+
+var temp_ser_sig = NULL;
+Server_proc(server, ECDSA_verify_key,server_key_share,data) = 
+	network?x.hello -> 
+	network?x.client_key_share.client_signature ->  //no need to verify client_signature 
+	 
+	network!server.hello -> 
+	Server_Send_hello_with_signature {
+		if (server == Tall_Bob){
+			temp_ser_sig = Tall_Bob_signature;
+		}
+		else {
+			temp_ser_sig = Short_Bob_signature;
+		}
+	}->
+	network!server.server_key_share.temp_ser_sig -> 
+	
+	
+	Compute_session_key {
+		if (server_key_share != TallBob_key_share1 &&  server_key_share != TallBob_key_share2){
+			if (server == Tall_Bob) {
+				if (x == Tall_Alice){
+					Tall_Bob_session_key = TallBob_TallAlice_session_key;
+				}
+				else {
+					Tall_Bob_session_key = Eve_TallBob_session_key;
+				}
+			} 
+			else {
+				if (x == Short_Alice){
+					Short_Bob_session_key = ShortBob_ShortAlice_session_key;
+				}
+				else {
+					Short_Bob_session_key = Eve_ShortBob_session_key;
+				}
+			}  
+		}
+		else {//perfect forward 
+			if (client_key_share == TallAlice_key_share1 && server_key_share == TallBob_key_share1){
+				Tall_Bob_session_key = TallBob_TallAlice_session_key1;
+			}
+			else if (client_key_share == TallAlice_key_share2 && server_key_share == TallBob_key_share2){
+				Tall_Bob_session_key = TallBob_TallAlice_session_key2;
+			}
+			else {
+				Tall_Bob_session_key = Eve_TallAlice_session_key;
+			}
+		}
+	}->
+
+	network!server.encrypted_extensions ->
+	network!server.certificate_request ->
+	network!server.certificate -> 
+   	network!server.certificate_verify ->
+   	network!server.finished->
+   	
+   	network?x.certificate ->
+   	network?x.certificate_verify ->
+   	network?x.finished ->
+   	
+	Connect {
+		if (server == Tall_Bob){
+			Tall_Bob_connect_to = x;
+		}
+		else {
+			Short_Bob_connect_to = x;
+		}
+	} ->
+	network?x.client_data->
+	network!server.data->
+
+	Skip;
+	//Server_proc(server, ECDSA_verify_key);
+
+Eve_proc() = 
+	network?x.hello -> 
+	network?x.key_share -> 
+	network!Eve.hello -> 
+	network!Eve.Eve_key_share ->  
+	Compute_session_key {
+		if (x == Tall_Alice) {
+			Eve_session_key1 = Eve_TallAlice_session_key;
+		} 
+		else {
+			Eve_session_key1 = Eve_ShortAlice_session_key;
+		}  
+	}-> Eve_proc() []
+
+
+	network?y.hello -> 
+	network?y.key_share ->  
+	Compute_session_key {
+		if (y == Tall_Bob) {
+			Eve_session_key2 = Eve_TallBob_session_key;
+		} 
+		else {
+			Eve_session_key2 = Eve_ShortBob_session_key;
+		}  
+	}-> Eve_proc() []	
+	
+	network?y.encrypted_extensions ->
+	network?y.certificate_request ->
+	network?y.certificate -> 
+   	network?y.certificate_verify ->
+   	network?y.finished ->
+   	network!Eve.hello -> 
+	network!Eve.Eve_key_share -> 
+	network!Eve.encrypted_extensions ->
+	network!Eve.certificate_request ->
+	network!Eve.certificate -> 
+   	network!Eve.certificate_verify ->
+   	network!Eve.finished -> Eve_proc() []
+   	
+   	network?x.certificate ->
+   	network?x.certificate_verify ->
+   	network?x.finished ->
+   	network!Eve.certificate ->
+   	network!Eve.certificate_verify ->
+   	network!Eve.finished -> Eve_proc();
+   	
+Eve_brother(session_key,data)=
+	decode_data{
+		if (session_key == TallBob_TallAlice_session_key1 && data == messageTall1){
+			Eve_brother_Decode_message = messageTall1;
+		}
+		else if (session_key == TallBob_TallAlice_session_key2 && data == messageTall2){
+			Eve_brother_Decode_message = messageTall2;
+		}
+		else if (session_key == session_key_inside_PSK && data == messagePSK1){
+			Eve_brother_Decode_message = messagePSK1;
+		}
+		else {
+			Eve_brother_Decode_message = NULL;
+		}
+	}->Skip
+;
+
+
+///////////////////////////////////
+PSK_mode_client(client, ECDSA_verify_key,client_key_share,data,new_session_ticket)=
+	network!client.hello ->
+	network!client.new_session_ticket ->
+	network!client.client_key_share ->
+	
+	network?x.hello -> 
+	network?x.server_key_share -> 
+	network?x.finished ->
+	Get_session_key {
+		if (new_session_ticket == PSK){
+			Tall_Alice_session_key = session_key_inside_PSK;
+			Tall_Alice_connect_to  = x;
+		}	
+	} -> 
+	network!client.data->
+	network?x.server_data->
+	Skip;
+
+PSK_mode_server(server, ECDSA_verify_key,server_key_share,data)=
+	network?x.hello ->
+	network?x.new_session_ticket ->
+	network?x.client_key_share ->
+	
+	network!server.hello -> 
+	network!server.server_key_share -> 
+	network!server.finished ->
+	Get_session_key {
+		if (new_session_ticket == PSK){
+			Tall_Bob_session_key = session_key_inside_PSK;
+			Tall_Bob_connect_to  = x;
+		}	
+	} -> 
+	network?x.client_data->
+	network!server.data->
+	Skip;
+
+
+/////////////////////////////////
+
+
+
+TLS_within_one_pair_Tall = Client_proc(Tall_Alice, TallBob_ECDSA_verify_key,TallAlice_key_share,messageTall) ||| Server_proc(Tall_Bob,TallAlice_ECDSA_verify_key,TallBob_key_share,messageTall);
+TLS_within_one_pair_Short = Client_proc(Short_Alice, ShortBob_ECDSA_verify_key,ShortAlice_key_share,messageShort) ||| Server_proc(Short_Bob,ShortAlice_ECDSA_verify_key,ShortBob_key_share,messageShort);
+
+TLS_within_one_pair_and_Eve = TLS_within_one_pair_Tall ||| Eve_proc();
+
+TLS_within_two_pairs= TLS_within_one_pair_Tall ||| TLS_within_one_pair_Short; 
+
+#define Can_Connected  (Tall_Alice_connect_to == Tall_Bob) && (Tall_Bob_connect_to == Tall_Alice);
+#assert TLS_within_one_pair_Tall reaches Can_Connected;
+
+//#define NOT_establisting_the_same_session_keys  (Tall_Alice_session_key != Tall_Bob_session_key) && (Tall_Alice_session_key != NULL)&& (Tall_Bob_session_key != NULL);
+//#assert SSL_within_one_pair reaches NOT_establisting_the_same_session_keys;
+
+#define establisting_the_same_session_keys !( (Tall_Alice_session_key != Tall_Bob_session_key) && (Tall_Alice_session_key != NULL)&& (Tall_Bob_session_key != NULL));
+#assert TLS_within_one_pair_Tall |= []<> establisting_the_same_session_keys;
+
+
+//#define NOT_secrecy_of_the_session_keys (Tall_Alice_session_key == Eve_session_key1) && (Tall_Bob_session_key == Eve_session_key2) && (Tall_Alice_session_key != NULL)&& (Tall_Bob_session_key != NULL);
+//#assert SSL_within_one_pair_and_Eve reaches NOT_secrecy_of_the_session_keys ;
+
+#define secrecy_of_the_session_keys !((Tall_Alice_session_key == Eve_session_key1) && (Tall_Bob_session_key == Eve_session_key2) && (Tall_Alice_session_key != NULL)&& (Tall_Bob_session_key != NULL));
+#assert TLS_within_one_pair_and_Eve |= []<> secrecy_of_the_session_keys ;
+
+
+//#define NOT_peer_authentication ((Tall_Alice_connect_to != Tall_Bob) || (Tall_Bob_connect_to != Tall_Alice)) && (Tall_Alice_connect_to != Nobody) && (Tall_Bob_connect_to != Nobody); 
+//#assert SSL_within_one_pair_and_Eve reaches NOT_peer_authentication ;
+
+
+#define peer_authentication !( ((Tall_Alice_connect_to != Tall_Bob) || (Tall_Bob_connect_to != Tall_Alice)) && (Tall_Alice_connect_to != Nobody) && (Tall_Bob_connect_to != Nobody)); 
+#assert TLS_within_one_pair_and_Eve |= []<> peer_authentication ;
+
+
+//#define NOT_uniqueness_of_session_keys (Tall_Alice_session_key == Short_Alice_session_key) && (Tall_Alice_session_key != NULL); 
+//#assert SSL_within_two_pairs reaches NOT_uniqueness_of_session_keys ;
+
+#define uniqueness_of_session_keys !( (Tall_Alice_session_key == Short_Alice_session_key) && (Tall_Alice_session_key != NULL)); 
+#assert TLS_within_two_pairs reaches uniqueness_of_session_keys ;
+
+//|= []<>
+
+
+//#define perfect_forward_secrecy;
+TLS_within_one_pair_session1 = Client_proc(Tall_Alice, TallBob_ECDSA_verify_key,TallAlice_key_share1,messageTall1) ||| Server_proc(Tall_Bob,TallAlice_ECDSA_verify_key,TallBob_key_share1,messageTall1);
+
+
+
+
+TLS_within_one_pair_session2 = Client_proc(Tall_Alice, TallBob_ECDSA_verify_key,TallAlice_key_share2,messageTall2) ||| Server_proc(Tall_Bob,TallAlice_ECDSA_verify_key,TallBob_key_share2,messageTall2);
+TLS_within_one_pair_TWO_sessions = TLS_within_one_pair_session1;TLS_within_one_pair_session2;
+TLS_within_one_pair_TWO_sessions_with_session_key_compromise = TLS_within_one_pair_TWO_sessions; Eve_brother(TallBob_TallAlice_session_key2,messageTall1);
+
+//#define session1_can_connect Tall_Alice_session_key ==Tall_Bob_session_key && Tall_Bob_session_key == TallBob_TallAlice_session_key1;
+//#assert TLS_within_one_pair_TWO_sessions reaches session1_can_connect;
+
+#define message_LEAK Eve_brother_Decode_message != NULL;
+#assert TLS_within_one_pair_TWO_sessions_with_session_key_compromise reaches message_LEAK;
+
+
+PSK_mode_session1 = PSK_mode_client(Tall_Alice, TallBob_ECDSA_verify_key,TallAlice_key_share1,messagePSK1,PSK) ||| PSK_mode_server(Tall_Bob, TallAlice_ECDSA_verify_key,TallBob_key_share1,messagePSK1);
+PSK_mode_session2 = PSK_mode_client(Tall_Alice, TallBob_ECDSA_verify_key,TallAlice_key_share2,messagePSK2,PSK) ||| PSK_mode_server(Tall_Bob, TallAlice_ECDSA_verify_key,TallBob_key_share2,messagePSK2);
+PSK_TWO_sessions = PSK_mode_session1;PSK_mode_session2;
+PSK_TWO_sessions_with_session_key_compromise = PSK_TWO_sessions; Eve_brother(session_key_inside_PSK,messagePSK1);
+
+//#assert PSK_TWO_sessions reaches Can_Connected;
+
+#assert PSK_TWO_sessions_with_session_key_compromise reaches message_LEAK;
