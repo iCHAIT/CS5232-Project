@@ -1,6 +1,9 @@
 import numpy as np
 
-fname = "final_order.txt"
+# Uncomment line fow which you want prob matrix
+# fname = "/Users/chaitanyagupta/Desktop/CS5232-Project/Twitter/final_order_twitter.txt"
+# fname = "/Users/chaitanyagupta/Desktop/CS5232-Project/Facebook/final_order_fb.txt"
+fname = "/Users/chaitanyagupta/Desktop/CS5232-Project/Dropbox/final_order_dropbox.txt"
 
 
 with open(fname) as f:
@@ -24,4 +27,4 @@ for i in range(len(order) - 1):
 
 
 print(matrix)
-# print(matrix / matrix.sum())
+print(matrix / matrix.sum())
