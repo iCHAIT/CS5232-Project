@@ -1,0 +1,92 @@
+﻿//=======================Model Details===========================
+enum{X,A,B,C,D,E,F,Y,null}; // 
+
+var trans = null;
+
+#define goal trans == Y;
+
+FromX = pcase {
+       [0] : trans_to_X{trans=X} -> FromX
+       [1] : trans_to_A{trans=A} -> FromA
+       [0] : trans_to_B{trans=B} -> FromB
+       [0] : trans_to_C{trans=C} -> FromC
+       [0] : trans_to_D{trans=D} -> FromD
+       [0] : trans_to_E{trans=E} -> FromE
+       [0] : trans_to_F{trans=F} -> FromF
+       [0] : trans_to_Y{trans=Y} -> Stop
+};
+
+FromA = pcase {
+       [0] : trans_to_X{trans=X} -> FromX
+       [0] : trans_to_A{trans=A} -> FromA
+       [1] : trans_to_B{trans=B} -> FromB
+       [0] : trans_to_C{trans=C} -> FromC
+       [0] : trans_to_D{trans=D} -> FromD
+       [0] : trans_to_E{trans=E} -> FromE
+       [0] : trans_to_F{trans=F} -> FromF
+       [0] : trans_to_Y{trans=Y} -> Stop
+};
+
+FromB = pcase {
+       [0] : trans_to_X{trans=X} -> FromX
+       [0] : trans_to_A{trans=A} -> FromA
+	   [0] : trans_to_B{trans=B} -> FromB
+       [1] : trans_to_C{trans=C} -> FromC
+       [0] : trans_to_D{trans=D} -> FromD
+       [0] : trans_to_E{trans=E} -> FromE
+       [0] : trans_to_F{trans=F} -> FromF
+       [0] : trans_to_Y{trans=Y} -> Stop
+};
+
+FromC = pcase {
+       [0] : trans_to_X{trans=X} -> FromX
+       [0] : trans_to_A{trans=A} -> FromA
+	   [0] : trans_to_B{trans=B} -> FromB
+       [0] : trans_to_C{trans=C} -> FromC
+       [1] : trans_to_D{trans=D} -> FromD
+       [0] : trans_to_E{trans=E} -> FromE
+       [0] : trans_to_F{trans=F} -> FromF
+       [0] : trans_to_Y{trans=Y} -> Stop
+};
+
+FromD = pcase {
+       [0] : trans_to_X{trans=X} -> FromX
+       [0] : trans_to_A{trans=A} -> FromA
+	   [0] : trans_to_B{trans=B} -> FromB
+       [0] : trans_to_C{trans=C} -> FromC
+       [0] : trans_to_D{trans=D} -> FromD
+       [1] : trans_to_E{trans=E} -> FromE
+       [0] : trans_to_F{trans=F} -> FromF
+       [0] : trans_to_Y{trans=Y} -> Stop
+};
+
+FromE = pcase {
+       [0] : trans_to_X{trans=X} -> FromX
+       [0] : trans_to_A{trans=A} -> FromA
+	   [0] : trans_to_B{trans=B} -> FromB
+       [0] : trans_to_C{trans=C} -> FromC
+       [0] : trans_to_D{trans=D} -> FromD
+       [0] : trans_to_E{trans=E} -> FromE
+       [1] : trans_to_F{trans=F} -> FromF
+       [0] : trans_to_Y{trans=Y} -> Stop
+};
+
+FromF = pcase {
+       [0] : trans_to_X{trans=X} -> FromX
+       [0] : trans_to_A{trans=A} -> FromA
+	   [0] : trans_to_B{trans=B} -> FromB
+       [0] : trans_to_C{trans=C} -> FromC
+       [0] : trans_to_D{trans=D} -> FromD
+       [0] : trans_to_E{trans=E} -> FromE
+       [0.86] : trans_to_F{trans=F} -> FromF
+       [0.14] : trans_to_Y{trans=Y} -> Stop
+};
+
+trace = FromX ;
+#assert trace reaches goal with prob;
+
+
+
+
+
+
