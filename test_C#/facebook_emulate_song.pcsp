@@ -1,0 +1,105 @@
+//=======================Model Details===========================
+enum{X,A,B,C,D,E,F,Y,null}; // 
+
+var trans = null;
+#import "read_file";
+#define goal trans == Y;
+
+//	call (function_read,text_metrix)
+var text_metrix[7][8] = [
+0,	1,	0,	0,	0,	0,	0,	0,
+0,	(47/100) ,(53/100),	0,	0,	0,	0,	0,
+0,	0,	0,	1,	0,	0,	0,	0,
+0,	0,	0,	0,	1,	0,	0,	0,
+0,	0,	(45/100),	(5/100),	0,	(5/10),	0,	0,
+0,	0,	0,	0,	0,	0,	1,	0,
+0,	0,	0,	0,	0,	(52/100),	0,	(48/100)
+
+]; //facebool;
+
+
+FromX = pcase {
+       text_metrix[0][0] : trans_to_Start{trans=X} -> FromX
+       text_metrix[0][1] : trans_to_Client_Hello{trans=A} -> FromA
+       text_metrix[0][2] : trans_to_Server_Hello{trans=B} -> FromB
+       text_metrix[0][3] : trans_to_Server_Hello_Done{trans=C} -> FromC
+       text_metrix[0][4] : trans_to_Client_KE{trans=D} -> FromD
+       text_metrix[0][5] : trans_to_New_Session_Ticket{trans=E} -> FromE
+       text_metrix[0][6] : trans_to_Application_Data{trans=F} -> FromF
+       text_metrix[0][7] : trans_to_Stop{trans=Y} -> Stop
+};
+
+FromA = pcase {
+       text_metrix[1][0] : trans_to_Start{trans=X} -> FromX
+       text_metrix[1][1] : trans_to_Client_Hello{trans=A} -> FromA
+       text_metrix[1][2] : trans_to_Server_Hello{trans=B} -> FromB
+       text_metrix[1][3] : trans_to_Server_Hello_Done{trans=C} -> FromC
+       text_metrix[1][4] : trans_to_Client_KE{trans=D} -> FromD
+       text_metrix[1][5] : trans_to_New_Session_Ticket{trans=E} -> FromE
+       text_metrix[1][6] : trans_to_Application_Data{trans=F} -> FromF
+       text_metrix[1][7] : trans_to_Stop{trans=Y} -> Stop
+};
+
+FromB = pcase {
+       text_metrix[2][0] : trans_to_Start{trans=X} -> FromX
+       text_metrix[2][1] : trans_to_Client_Hello{trans=A} -> FromA
+	   text_metrix[2][2] : trans_to_Server_Hello{trans=B} -> FromB
+       text_metrix[2][3] : trans_to_Server_Hello_Done{trans=C} -> FromC
+       text_metrix[2][4] : trans_to_Client_KE{trans=D} -> FromD
+       text_metrix[2][5] : trans_to_New_Session_Ticket{trans=E} -> FromE
+       text_metrix[2][6] : trans_to_Application_Data{trans=F} -> FromF
+       text_metrix[2][7] : trans_to_Stop{trans=Y} -> Stop
+};
+
+FromC = pcase {
+       text_metrix[3][0] : trans_to_Start{trans=X} -> FromX
+       text_metrix[3][1] : trans_to_Client_Hello{trans=A} -> FromA
+	   text_metrix[3][2] : trans_to_Server_Hello{trans=B} -> FromB
+       text_metrix[3][3] : trans_to_Server_Hello_Done{trans=C} -> FromC
+       text_metrix[3][4] : trans_to_Client_KE{trans=D} -> FromD
+       text_metrix[3][5] : trans_to_New_Session_Ticket{trans=E} -> FromE
+       text_metrix[3][6] : trans_to_Application_Data{trans=F} -> FromF
+       text_metrix[3][7] : trans_to_Stop{trans=Y} -> Stop
+};
+
+FromD = pcase {
+       text_metrix[4][0] : trans_to_Start{trans=X} -> FromX
+       text_metrix[4][1] : trans_to_Client_Hello{trans=A} -> FromA
+	   text_metrix[4][2] : trans_to_Server_Hello{trans=B} -> FromB
+       text_metrix[4][3] : trans_to_Server_Hello_Done{trans=C} -> FromC
+       text_metrix[4][4] : trans_to_Client_KE{trans=D} -> FromD
+       text_metrix[4][5] : trans_to_New_Session_Ticket{trans=E} -> FromE
+       text_metrix[4][6] : trans_to_Application_Data{trans=F} -> FromF
+       text_metrix[4][7] : trans_to_Stop{trans=Y} -> Stop
+};
+
+FromE = pcase {
+       text_metrix[5][0] : trans_to_Start{trans=X} -> FromX
+       text_metrix[5][1] : trans_to_Client_Hello{trans=A} -> FromA
+	   text_metrix[5][2] : trans_to_Server_Hello{trans=B} -> FromB
+       text_metrix[5][3] : trans_to_Server_Hello_Done{trans=C} -> FromC
+       text_metrix[5][4] : trans_to_Client_KE{trans=D} -> FromD
+       text_metrix[5][5] : trans_to_New_Session_Ticket{trans=E} -> FromE
+       text_metrix[5][6] : trans_to_Application_Data{trans=F} -> FromF
+       text_metrix[5][7] : trans_to_Stop{trans=Y} -> Stop
+};
+
+FromF = pcase {
+       text_metrix[6][0] : trans_to_Start{trans=X} -> FromX
+       text_metrix[6][1] : trans_to_Client_Hello{trans=A} -> FromA
+	   text_metrix[6][2] : trans_to_Server_Hello{trans=B} -> FromB
+       text_metrix[6][3] : trans_to_Server_Hello_Done{trans=C} -> FromC
+       text_metrix[6][4] : trans_to_Client_KE{trans=D} -> FromD
+       text_metrix[6][5] : trans_to_New_Session_Ticket{trans=E} -> FromE
+       text_metrix[6][6] : trans_to_Application_Data{trans=F} -> FromF
+       text_metrix[6][7] : trans_to_Stop{trans=Y} -> Stop
+};
+
+trace = FromX ;
+#assert trace reaches goal with prob;
+
+
+
+
+
+
